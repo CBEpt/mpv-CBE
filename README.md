@@ -1,8 +1,9 @@
 # mpv-CBE  
-这是一个面向小白的mpv整合包~！ 我也是小白！Always learning!   
-不敢保证功能都是稳定的奥，不过比potplayer内置渣渣滤镜什么的强多了，并不用复杂设置，解压即用，开源，mvtools法一键倍帧，免费，不需要SVP4（当然也可以往上加，自己研究）
+这是一个面向小白的mpv整合包！我也是小白！Always learning!   
+不敢保证功能一直都是稳定的，不过比potplayer/恒星播放器之流强多了，并不用复杂设置，解压即用，mvtools一键倍帧，不需要SVP4（当然也可以加，可以自行研究）
 # 第一次使用  
 建议把压缩包里面所有东西解压到如C:/mpv  
+进入mpv文件夹下的```installer```, 执行```mpv-install.bat```（建立媒体文件关联，酱紫打开媒体文件就默认使用mpv了）  
 修改任何配置, 请编辑mpv目录下的```portable_config/mpv.conf```  
 修改任何快捷键关联, 请编辑mpv目录下的```portable_config/input.conf```，推荐使用[Notepad3](https://www.rizonesoft.com/downloads/notepad3/)进行编辑，更加可视化，有颜色指示  
 特性：  
@@ -17,28 +18,31 @@
 以及下面的三个包  
 ![image](https://user-images.githubusercontent.com/103420806/214845172-bdfe743a-e733-439f-ade6-18dc23f9b189.png)  
 解压到了mpv文件夹，实现了倍帧功能。  
-- portable_config配置文件夹跟随 [dyphire / mpv-config](https://github.com/dyphire/mpv-config)的最新commit, 只修改了快捷键，如下：  
+- portable_config配置文件夹跟随 [dyphire / mpv-config](https://github.com/dyphire/mpv-config)的最新release, 进行了一些修改，如下：  
 
 # 快捷键指南
 基于[dyphire的mpv-config](https://github.com/dyphire/mpv-config)修改了一些快捷键关联
-- 2是滤镜：倍帧（记忆方法：2倍于原帧数，所以是ctrl+2)，关闭：再按一次2  
-- 4是着色器：动漫抗锯齿（记忆方法：Anime4K里面有个4，所以ctrl+4)，关闭：再按一次4  
+- 2 开启倍帧滤镜（记忆方法：2倍于原帧数，所以是2)，关闭：再按一次2  
+- 4 开启动漫抗锯齿（记忆方法：Anime4K里面有个4，所以4)，关闭：再按一次4  
 - TAB，就是你大写锁上面的那个键，打开osc文件浏览器（基本选择什么文件，操作都不依赖鼠标）
 - a, audio, 打开osc音轨列表
 - s, subtitle，打开osc字幕轨列表
-- c, chapter，打开osc章节列表（视频含有章节才有效奥），另外HOME是上一个章节，END是下一个章节
+- c, chapter，打开osc章节列表（视频含有章节才有效奥），另外HOME是上一个章节，END是下一个章节  
+![2023-02-20_12-22-19](https://user-images.githubusercontent.com/103420806/220013074-083cb73f-d0dc-4b6a-8941-7efc94eda84f.png)
 - d, directory/定位，打开当前播放文件的目录
-- w指定gif开始截取的地方，W指定结束的地方（注意是大W，先按一下键盘上的大写锁Capslock），然后CTRL+W(注意这里我修改为还是大W）截取gif。目前建议截取不带字幕的gif.
+- gif截取：w指定开始截取的地方，W指定截取结束的地方（注意是大W，先按一下大写锁Capslock），然后CTRL+W(注意这里我修改为还是大W）截取不带字幕的gif。目前带字幕的gif只支持文本字幕.
 - l, 即last，在打开mpv显示黑界面的时候用，可以快速回到上一次播放的文件及进度
 - b, 老板键? 快速最小化
 - q, quit, 一键退出
 - r字幕下移，t字幕上移，j字幕缩小，k字幕放大，```，``` ```。```逐帧前后进，↑为前进一分钟，↓为后退一分钟，←为回退五秒，→为前进五秒
+- o，按一次，uosc精确时间轴常驻显示，再按一次关闭。默认关闭。开启后位于画面左上角。
+- i，info, 常驻显示当前信息。I，短暂显示。
 - ```[```  速度-0.1x,   ``` ]```速度+0.1x
 
 
 # 一些设置的修改指南
 基于[dyphire的mpv-config](https://github.com/dyphire/mpv-config)修改了一些设置  
-- mpv窗口默认不置顶, 修改请找到mpv目录下的```portable_config/mpv.conf```，功能分区里```title=```这一行加上```${?ontop==yes:📌}```  
+- mpv窗口默认不置顶, 可以ALT+t改变是否置顶。彻底修改请找到mpv目录下的```portable_config/mpv.conf```，功能分区里```title=```这一行加上```${?ontop==yes:📌}```  
 - 默认设备是双声道，执行动态映射下混，如果你用的是5.1/7.1，请到mpv目录下```portable_config/mpv.conf```里面找到这一行，  
 audio-channels=stereo                 # <默认值auto-safe|auto|layouts|stereo>，如果双声道系统播放多声道影片时有的声道声音没出现，尝试强制设定为双声道  
 进行修改，将```stereo```修改为```7.1,5.1,stereo```, mpv将自动寻找适配到7.1或5.1  
