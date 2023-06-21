@@ -60,7 +60,7 @@ filters=string.format("fps=%s,zscale='trunc(ih*dar/2)*2:trunc(ih/2)*2':f=spline3
 local output_directory = mp.command_native({ "expand-path", options.dir })
 --create output_directory if it doesn't exist
 if utils.readdir(output_directory) == nil then
-    local args = { 'powershell', '-NoProfile', '-Command', 'mkdir', output_directory }
+    local args = { 'powershell', '-NoProfile', '-Command', 'mkdir', string.format("\"%s\"", output_directory) }
     local res = mp.command_native({name = "subprocess", capture_stdout = true, playback_only = false, args = args})
     if res.status ~= 0 then
         msg.error("Failed to create animated_dir save directory "..output_directory..". Error: "..(res.error or "unknown"))
@@ -195,11 +195,11 @@ function make_animated_internal(burn_subtitles)
     local res = mp.command_native({name = "subprocess", capture_stdout = true, playback_only = false, args = args})
     mp.set_osd_ass(screenx, screeny, "")
     if res.status ~= 0 then
-        msg.info("Failed to creat " .. text)
+        msg.info("Failed to creat " .. animated_name)
         mp.osd_message("Error creating " .. text .. ", check console for more info.")
         return
     end
-    msg.info(text .. " created.")
+    msg.info(animated_name .. " created.")
     mp.osd_message(text .. " created.")
 end
 

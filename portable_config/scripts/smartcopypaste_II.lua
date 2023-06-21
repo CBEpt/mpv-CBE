@@ -2,7 +2,7 @@
 -- License: BSD 2-Clause License
 -- Creator: Eisa AlAwadhi
 -- Project: SmartCopyPaste_II
--- Version: 3.2
+-- Version: 3.2.1
 
 local o = {
 ---------------------------USER CUSTOMIZATION SETTINGS---------------------------
@@ -304,7 +304,7 @@ local log_fullpath = utils.join_path(o.log_path, o.log_file)
 local log_path = utils.split_path(log_fullpath)
 if utils.readdir(log_path) == nil then
     local is_windows = package.config:sub(1, 1) == "\\"
-    local windows_args = { 'powershell', '-NoProfile', '-Command', 'mkdir', log_path }
+    local windows_args = { 'powershell', '-NoProfile', '-Command', 'mkdir', string.format("\"%s\"", log_path) }
     local unix_args = { 'mkdir', '-p', log_path }
     local args = is_windows and windows_args or unix_args
     local res = mp.command_native({name = "subprocess", capture_stdout = true, playback_only = false, args = args})
@@ -337,11 +337,8 @@ local sortName
 
 function starts_protocol(tab, val)
 	for index, element in ipairs(tab) do
-        if string.find(val, element) then
-            return true
-        end
-		if (val:find(element) == 1) then
-			return true
+		if string.find(val, element) then
+             		return true
 		end
 	end
 	return false
@@ -2281,7 +2278,7 @@ function parse_clipboard(text)
 	clip = text
 
 
-	for c in clip:gmatch("[^\n\r+]+") do
+	for c in clip:gmatch("[^\n\r]+") do --3.2.1# fix for #80 , accidentally additional "+" was added to the gmatch
 		local c_pre_attribute, c_clip_file, c_clip_time, c_clip_extension
 		c = make_raw(c)
 		

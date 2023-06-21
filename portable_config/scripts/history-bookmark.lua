@@ -17,6 +17,8 @@ local o = {
     history_dir = "/:dir%mpvconf%/historybookmarks",
     -- specifies the extension of the history-bookmark file
     bookmark_ext = ".mpv.history",
+    -- use hash to bookmark_name
+    hash = true,
     -- set false to get playlist from directory
     use_playlist = false,
     -- specifies a whitelist of files to find in a directory
@@ -52,21 +54,21 @@ local bookmark_path = nil
 local wait_msg
 local on_key = false
 
-if o.history_dir:match('^/:dir%%mpvconf%%') then
+if o.history_dir:find('^/:dir%%mpvconf%%') then
     o.history_dir = o.history_dir:gsub('/:dir%%mpvconf%%', mp.find_config_file('.'))
-elseif o.history_dir:match('^/:dir%%script%%') then
+elseif o.history_dir:find('^/:dir%%script%%') then
     o.history_dir = o.history_dir:gsub('/:dir%%script%%', mp.find_config_file('scripts'))
-elseif o.history_dir:match('/:var%%(.*)%%') then
+elseif o.history_dir:find('/:var%%(.*)%%') then
     local os_variable = o.history_dir:match('/:var%%(.*)%%')
     o.history_dir = o.history_dir:gsub('/:var%%(.*)%%', os.getenv(os_variable))
-elseif o.history_dir:match('^~~') then
-    o.history_dir = mp.command_native({ "expand-path", o.history_dir })
+elseif o.history_dir:find('^~') then
+    o.history_dir = mp.command_native({ "expand-path", o.history_dir }) -- Expands both ~ and ~~
 end
 
 --create o.history_dir if it doesn't exist
 if utils.readdir(o.history_dir) == nil then
     local is_windows = package.config:sub(1, 1) == "\\"
-    local windows_args = { 'powershell', '-NoProfile', '-Command', 'mkdir', o.history_dir }
+    local windows_args = { 'powershell', '-NoProfile', '-Command', 'mkdir', string.format("\"%s\"", o.history_dir) }
     local unix_args = { 'mkdir', '-p', o.history_dir }
     local args = is_windows and windows_args or unix_args
     local res = mp.command_native({ name = "subprocess", capture_stdout = true, playback_only = false, args = args })
@@ -100,15 +102,12 @@ local function exclude(extension)
 end
 
 local function is_protocol(path)
-    return type(path) == 'string' and (path:match('^%a[%a%d-_]+://') ~= nil or path:match('^%a[%a%d-_]+:\\?') ~= nil)
+    return type(path) == 'string' and (path:find('^%a[%a%d-_]+://') ~= nil or path:find('^%a[%a%d-_]+:\\?') ~= nil)
 end
 
 local function need_ignore(tab, val)
     for index, element in ipairs(tab) do
         if string.find(val, element) then
-            return true
-        end
-        if (val:find(element) == 1) then
             return true
         end
     end
@@ -131,7 +130,7 @@ function refresh_globals()
     path = mp.get_property("path")
     fname = mp.get_property("filename")
     pl_count = mp.get_property_number('playlist-count', 0)
-    if not is_protocol(path) then
+    if path and not is_protocol(path) then
         path = utils.join_path(mp.get_property('working-directory'), path)
         dir = utils.split_path(path)
     else
@@ -139,9 +138,63 @@ function refresh_globals()
     end
 end
 
+-- returns md5 hash of the full path of the current media file
+local function hash(path)
+    if path == nil then
+        msg.debug("something is wrong with the path, can't get full_path, can't hash it")
+        return
+    end
+
+    msg.debug("hashing:", path)
+
+    local cmd = {
+        name = 'subprocess',
+        capture_stdout = true,
+        playback_only = false,
+    }
+    local args = nil
+
+    local is_unix = package.config:sub(1,1) == "/"
+    if is_unix then
+        local md5 = command_exists("md5sum") or command_exists("md5") or command_exists("openssl", "md5 | cut -d ' ' -f 2")
+        if md5 == nil then
+            msg.warn("no md5 command found, can't generate hash")
+            return
+        end
+        md5 = table.concat(md5, " ")
+        cmd["stdin_data"] = path
+        args = {"sh", "-c", md5 .. " | cut -d ' ' -f 1 | tr '[:lower:]' '[:upper:]'" }
+    else --windows
+        -- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/get-filehash?view=powershell-7.3
+        local hash_command ="$s = [System.IO.MemoryStream]::new(); $w = [System.IO.StreamWriter]::new($s); $w.write(\"" .. path .. "\"); $w.Flush(); $s.Position = 0; Get-FileHash -Algorithm MD5 -InputStream $s | Select-Object -ExpandProperty Hash"
+        args = {"powershell", "-NoProfile", "-Command", hash_command}
+    end
+    cmd["args"] = args
+    msg.debug("hash cmd:", utils.to_string(cmd))
+    local process = mp.command_native(cmd)
+
+    if process.status == 0 then
+        local hash = process.stdout:gsub("%s+", "")
+        msg.debug("hash:", hash)
+        return hash
+    else
+        msg.warn("hash function failed")
+        return
+    end
+end
+
 local function get_bookmark_path(dir)
     local fpath = string.sub(dir, 1, -2)
-    local _, history_name = utils.split_path(fpath)
+    local _, name = utils.split_path(fpath)
+    if o.hash then
+        history_name = hash(dir)
+        if history_name == nil then
+            msg.warn("hash function failed, fallback to dirname")
+            history_name = name
+        end
+    else
+        history_name = name
+    end
     local bookmark_name = history_name .. o.bookmark_ext
     bookmark_path = utils.join_path(o.history_dir, bookmark_name)
 end

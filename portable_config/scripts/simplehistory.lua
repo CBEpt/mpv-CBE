@@ -270,7 +270,7 @@ local log_fullpath = utils.join_path(o.log_path, o.log_file)
 local log_path = utils.split_path(log_fullpath)
 if utils.readdir(log_path) == nil then
     local is_windows = package.config:sub(1, 1) == "\\"
-    local windows_args = { 'powershell', '-NoProfile', '-Command', 'mkdir', log_path }
+    local windows_args = { 'powershell', '-NoProfile', '-Command', 'mkdir', string.format("\"%s\"", log_path) }
     local unix_args = { 'mkdir', '-p', log_path }
     local args = is_windows and windows_args or unix_args
     local res = mp.command_native({name = "subprocess", capture_stdout = true, playback_only = false, args = args})
@@ -308,11 +308,8 @@ local sortName
 
 function starts_protocol(tab, val)
 	for index, element in ipairs(tab) do
-        if string.find(val, element) then
-            return true
-        end
-		if (val:find(element) == 1) then
-			return true
+		if string.find(val, element) then
+             		return true
 		end
 	end
 	return false
@@ -504,9 +501,9 @@ function list_sort(tab, sort)
 		local function padnum(d) local dec, n = string.match(d, "(%.?)0*(.+)")
 			return #dec > 0 and ("%.12f"):format(d) or ("%s%03d%s"):format(dec, #n, n) end
 		if sort == 'alphanum-asc' then
-			table.sort(tab, function(a, b) return tostring(a['found_path']):lower():gsub("%.?%d+", padnum) .. ("%3d"):format(#b) > tostring(b['found_path']):gsub("%.?%d+", padnum) .. ("%3d"):format(#a) end)
+			table.sort(tab, function(a, b) return tostring(a['found_path']):lower():gsub("%.?%d+", padnum) .. ("%3d"):format(#b) > tostring(b['found_path']):lower():gsub("%.?%d+", padnum) .. ("%3d"):format(#a) end)
 		elseif sort == 'alphanum-desc' then
-			table.sort(tab, function(a, b) return tostring(a['found_path']):lower():gsub("%.?%d+", padnum) .. ("%3d"):format(#b) < tostring(b['found_path']):gsub("%.?%d+", padnum) .. ("%3d"):format(#a) end)
+			table.sort(tab, function(a, b) return tostring(a['found_path']):lower():gsub("%.?%d+", padnum) .. ("%3d"):format(#b) < tostring(b['found_path']):lower():gsub("%.?%d+", padnum) .. ("%3d"):format(#a) end)
 		end
 	end
 	
